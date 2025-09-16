@@ -1,1 +1,284 @@
-Raildev
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RailDev Platform</title>
+
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style type="text/tailwindcss">
+        /* Government & Professional Theme */
+        :root { 
+            --gvt-primary: #334155; /* slate-700 */
+            --gvt-primary-hover: #1e293b; /* slate-800 */
+            --gvt-text-primary: #1e293b; /* slate-800 */
+            --gvt-text-secondary: #475569; /* slate-600 */
+            --gvt-border: #e2e8f0; /* slate-200 */
+            --gvt-bg-light: #f1f5f9; /* slate-100 */
+        }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .nav-active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+        
+        /* Subdued Status Colors */
+        .status-passed { color: #166534; background-color: #dcfce7; } /* green */
+        .status-failed { color: #991b1b; background-color: #fee2e2; } /* red */
+        .status-progress { color: #9a3412; background-color: #ffedd5; } /* orange */
+        .status-open { color: #374151; background-color: #f3f4f6; } /* gray */
+        .status-medium { color: #a16207; background-color: #fefce8; } /* yellow */
+        .status-low { color: #1d4ed8; background-color: #dbeafe; } /* blue */
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #aaa; }
+    </style>
+</head>
+
+<body class="bg-slate-200" style="font-family: 'Public Sans', sans-serif;">
+
+    <div x-data="railDevApp()" class="mx-auto max-w-md min-h-screen bg-[var(--gvt-bg-light)] shadow-2xl rounded-lg overflow-hidden flex flex-col">
+
+        <!-- ===== AUTHENTICATION SCREENS ===== -->
+        <main x-show="!user" x-cloak class="flex-grow flex flex-col justify-center p-8">
+            <div class="text-center mb-10">
+                <span class="material-symbols-outlined text-5xl text-[var(--gvt-primary)]">train</span>
+                <h1 class="text-3xl font-bold text-[var(--gvt-text-primary)]">RailDev</h1>
+            </div>
+            <!-- Login Screen -->
+            <div x-show="authScreen === 'login'">
+                <h2 class="text-2xl font-bold text-[var(--gvt-text-primary)] mb-2">Sign In</h2>
+                <p class="text-[var(--gvt-text-secondary)] mb-8">Enter your official credentials.</p>
+                <form @submit.prevent="login()">
+                    <div class="space-y-4">
+                        <div class="relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">badge</span><input type="text" x-model="loginForm.employeeId" class="form-input w-full rounded-md border-[var(--gvt-border)] h-12 pl-10" placeholder="Employee ID"></div>
+                        <div class="relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">lock</span><input type="password" x-model="loginForm.password" class="form-input w-full rounded-md border-[var(--gvt-border)] h-12 pl-10" placeholder="Password"></div>
+                    </div>
+                    <p x-show="loginError" x-text="loginError" class="text-red-600 text-sm mt-2"></p>
+                    <button type="submit" class="w-full bg-[var(--gvt-primary)] text-white font-bold py-3 rounded-md mt-6 hover:bg-[var(--gvt-primary-hover)] transition-all">Login</button>
+                    <p class="text-center text-sm text-[var(--gvt-text-secondary)] mt-6">No account? <a href="#" @click.prevent="authScreen = 'register'" class="font-semibold text-[var(--gvt-primary)]">Register here</a></p>
+                </form>
+            </div>
+            <!-- Register Screen -->
+            <div x-show="authScreen === 'register'">
+                <h2 class="text-2xl font-bold text-[var(--gvt-text-primary)] mb-2">Create Account</h2>
+                <p class="text-[var(--gvt-text-secondary)] mb-8">Complete registration to gain access.</p>
+                <form @submit.prevent="register()">
+                    <div class="space-y-4">
+                        <div class="relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">person</span><input type="text" x-model="registerForm.name" class="form-input w-full rounded-md border-[var(--gvt-border)] h-12 pl-10" placeholder="Full Name" required></div>
+                        <div class="relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">badge</span><input type="text" x-model="registerForm.employeeId" class="form-input w-full rounded-md border-[var(--gvt-border)] h-12 pl-10" placeholder="Employee ID" required></div>
+                        <div class="relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">lock</span><input type="password" x-model="registerForm.password" class="form-input w-full rounded-md border-[var(--gvt-border)] h-12 pl-10" placeholder="Password" required></div>
+                    </div>
+                    <p x-show="registerError" x-text="registerError" class="text-red-600 text-sm mt-2"></p>
+                    <button type="submit" class="w-full bg-[var(--gvt-primary)] text-white font-bold py-3 rounded-md mt-6 hover:bg-[var(--gvt-primary-hover)] transition-all">Register</button>
+                    <p class="text-center text-sm text-[var(--gvt-text-secondary)] mt-6">Already have an account? <a href="#" @click.prevent="authScreen = 'login'" class="font-semibold text-[var(--gvt-primary)]">Login here</a></p>
+                </form>
+            </div>
+        </main>
+
+        <!-- ===== MAIN APPLICATION (Logged In) ===== -->
+        <div x-show="user" x-cloak class="flex-grow flex flex-col">
+            <div class="flex-grow flex flex-col">
+                <!-- Page Content Area -->
+                <main class="flex-grow overflow-y-auto" :class="{'pb-24': !detailView}">
+
+                    <!-- Home Screen -->
+                    <div x-show="currentScreen === 'home'">
+                        <header class="bg-white p-4 flex items-center justify-between border-b border-[var(--gvt-border)] sticky top-0 z-10"><h1 class="text-xl font-bold text-[var(--gvt-text-primary)]" x-text="`Hi, ${user?.name.split(' ')[0]}`"></h1><div class="h-10 w-10 rounded-full bg-[var(--gvt-primary)] text-white flex items-center justify-center font-bold" x-text="user?.name.split(' ').map(n => n[0]).join('')"></div></header>
+                        <div class="p-4 space-y-4">
+                            <div @click="showAnalytics = true" class="p-4 bg-[var(--gvt-primary)] text-white rounded-lg cursor-pointer flex items-center gap-4 hover:bg-[var(--gvt-primary-hover)] transition-colors">
+                                <span class="material-symbols-outlined text-4xl">monitoring</span>
+                                <div><h2 class="text-lg font-bold">Analytics & Insights</h2><p class="text-sm opacity-90">View vendor performance & defect trends</p></div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white p-4 rounded-lg border border-[var(--gvt-border)] flex items-center gap-3">
+                                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-green-100 text-green-700"><span class="material-symbols-outlined">thumb_up</span></div>
+                                    <div><p class="text-2xl font-bold text-[var(--gvt-text-primary)]" x-text="Object.values(fittings).filter(f => f.status === 'Passed').length"></p><p class="text-sm text-[var(--gvt-text-secondary)]">Passed Assets</p></div>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg border border-[var(--gvt-border)] flex items-center gap-3">
+                                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-red-100 text-red-700"><span class="material-symbols-outlined">cancel</span></div>
+                                    <div><p class="text-2xl font-bold text-[var(--gvt-text-primary)]" x-text="Object.values(fittings).filter(f => f.status === 'Failed').length"></p><p class="text-sm text-[var(--gvt-text-secondary)]">Failed Assets</p></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h2 class="text-base font-bold text-[var(--gvt-text-primary)] mb-2 px-1">Recent Reports</h2>
+                                <div class="space-y-3">
+                                   <template x-for="report in reports.slice(-3).reverse()" :key="report.id">
+                                        <div @click="viewReport(report.id)" class="bg-white rounded-lg p-3 border border-[var(--gvt-border)] flex items-center gap-4 cursor-pointer hover:border-[var(--gvt-primary)] hover:bg-white transition-all">
+                                            <div class="flex-grow"><p class="text-[var(--gvt-text-primary)] font-semibold" x-text="report.issueType"></p><p class="text-[var(--gvt-text-secondary)] text-sm font-mono" x-text="report.fittingUID"></p></div>
+                                            <div class="text-right space-y-1"><span class="text-xs font-semibold uppercase px-2 py-1 rounded" :class="{ 'status-failed': report.severity === 'High', 'status-medium': report.severity === 'Medium', 'status-low': report.severity === 'Low' }" x-text="report.severity"></span></div>
+                                        </div>
+                                   </template>
+                                   <p x-show="reports.length === 0" class="text-center text-[var(--gvt-text-secondary)] py-8 bg-white border border-[var(--gvt-border)] rounded-lg">No reports have been filed.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other Screens (Scan, Inventory, Reports, Settings) -->
+                    <div x-show="['scan', 'inventory', 'reports', 'settings'].includes(currentScreen)">
+                         <header class="bg-white p-4 border-b border-[var(--gvt-border)] sticky top-0 z-10"><h1 class="text-xl font-bold text-[var(--gvt-text-primary)] capitalize" x-text="currentScreen"></h1></header>
+                         <div class="p-4 space-y-4">
+                            <!-- Scan Screen Content -->
+                            <div x-show="currentScreen === 'scan'">
+                                <div class="relative mb-6 flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg bg-slate-900">
+                                    <div class="absolute inset-0 bg-black opacity-40"></div>
+                                    <div class="relative z-10 h-3/4 w-3/4"><div class="absolute left-0 top-0 h-10 w-10 border-l-2 border-t-2 border-white/80 rounded-tl-md"></div><div class="absolute right-0 top-0 h-10 w-10 border-r-2 border-t-2 border-white/80 rounded-tr-md"></div><div class="absolute bottom-0 left-0 h-10 w-10 border-b-2 border-l-2 border-white/80 rounded-bl-md"></div><div class="absolute bottom-0 right-0 h-10 w-10 border-b-2 border-r-2 border-white/80 rounded-br-md"></div></div>
+                                    <p class="absolute bottom-4 z-10 text-center text-sm text-white">Align QR code within the frame</p>
+                                </div>
+                                <div class="space-y-4 bg-white p-4 rounded-lg border border-[var(--gvt-border)]">
+                                    <h2 class="text-lg font-bold text-[var(--gvt-text-primary)] text-center">Simulate Scan</h2>
+                                    <div class="flex gap-2"><input x-model="scanInput" @keyup.enter="scanItem(scanInput)" class="form-input w-full rounded-md" type="text" placeholder="Enter or select a UID"><button @click="scanItem(scanInput)" class="bg-[var(--gvt-primary)] text-white px-4 rounded-md font-semibold hover:bg-[var(--gvt-primary-hover)]">Find</button></div>
+                                    <p x-show="scanStatus.message" x-text="scanStatus.message" :class="scanStatus.success ? 'text-green-600' : 'text-red-600'" class="text-center text-sm font-medium pt-1"></p>
+                                    <div class="text-center pt-2"><p class="text-xs text-slate-400 mb-2">Quick Select:</p><div class="flex justify-center gap-2"><button @click="scanInput='A1B2-C3D4-E5F6-G7H8'; scanItem(scanInput);" class="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded">...G7H8</button><button @click="scanInput='X9Y8-Z7W6-V5U4-T3S2'; scanItem(scanInput);" class="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded">...T3S2</button></div></div>
+                                </div>
+                            </div>
+                             <!-- Inventory Screen Content -->
+                            <div x-show="currentScreen === 'inventory'">
+                                <div class="relative"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span><input type="text" x-model="inventoryFilters.search" class="form-input w-full rounded-md border-[var(--gvt-border)] pl-10" placeholder="Search by UID or Vendor..."></div>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <select x-model="inventoryFilters.type" class="form-select rounded-md border-[var(--gvt-border)] text-sm"><option value="all">All Types</option><option>Elastic Rail Clip</option><option>Liner</option><option>Rail Pad</option></select>
+                                    <select x-model="inventoryFilters.status" class="form-select rounded-md border-[var(--gvt-border)] text-sm"><option value="all">All Statuses</option><option>Passed</option><option>Failed</option></select>
+                                    <button @click="resetInventoryFilters()" class="text-sm text-[var(--gvt-text-secondary)] hover:text-[var(--gvt-text-primary)]">Reset</button>
+                                </div>
+                                <div class="space-y-3 pt-2">
+                                    <template x-for="fitting in filteredInventory" :key="fitting.uid">
+                                        <div @click="viewFitting(fitting.uid)" class="bg-white rounded-lg p-3 border border-[var(--gvt-border)] flex items-center gap-4 cursor-pointer hover:border-[var(--gvt-primary)] hover:bg-slate-50 transition-all">
+                                            <div class="p-2 rounded-full" :class="fitting.status === 'Passed' ? 'status-passed' : 'status-failed'"><span class="material-symbols-outlined" x-text="fitting.icon"></span></div>
+                                            <div class="flex-grow"><p class="text-[var(--gvt-text-primary)] font-semibold" x-text="fitting.type"></p><p class="text-[var(--gvt-text-secondary)] text-sm font-mono" x-text="fitting.uid"></p></div>
+                                            <span class="material-symbols-outlined text-slate-400">chevron_right</span>
+                                        </div>
+                                    </template>
+                                    <p x-show="filteredInventory.length === 0" class="text-center text-[var(--gvt-text-secondary)] py-8">No items match your filters.</p>
+                                </div>
+                            </div>
+                            <!-- Reports Screen Content -->
+                             <div x-show="currentScreen === 'reports'" class="relative">
+                                <div class="grid grid-cols-3 gap-2">
+                                    <select x-model="reportFilters.severity" class="form-select rounded-md border-[var(--gvt-border)] text-sm"><option value="all">All Severities</option><option>High</option><option>Medium</option><option>Low</option></select>
+                                    <select x-model="reportFilters.status" class="form-select rounded-md border-[var(--gvt-border)] text-sm"><option value="all">All Statuses</option><option>Open</option><option>In Progress</option><option>Resolved</option></select>
+                                    <button @click="resetReportFilters()" class="text-sm text-[var(--gvt-text-secondary)] hover:text-[var(--gvt-text-primary)]">Reset</button>
+                                </div>
+                                <div class="space-y-3 pt-2">
+                                   <template x-for="report in filteredReports" :key="report.id">
+                                        <div @click="viewReport(report.id)" class="bg-white rounded-lg p-3 border border-[var(--gvt-border)] flex items-center gap-4 cursor-pointer hover:border-[var(--gvt-primary)] hover:bg-slate-50 transition-all">
+                                            <div class="flex-grow"><p class="text-[var(--gvt-text-primary)] font-semibold" x-text="report.issueType"></p><p class="text-[var(--gvt-text-secondary)] text-sm font-mono" x-text="report.fittingUID"></p></div>
+                                            <div class="text-right space-y-1"><span class="text-xs font-semibold uppercase px-2 py-1 rounded" :class="{ 'status-failed': report.severity === 'High', 'status-medium': report.severity === 'Medium', 'status-low': report.severity === 'Low' }" x-text="report.severity"></span><p class="text-xs font-semibold px-2 py-1 rounded" :class="{ 'status-open': report.status === 'Open', 'status-progress': report.status === 'In Progress', 'status-passed': report.status === 'Resolved' }" x-text="report.status"></p></div>
+                                        </div>
+                                   </template>
+                                    <p x-show="filteredReports.length === 0" class="text-center text-[var(--gvt-text-secondary)] py-8">No reports match your filters.</p>
+                                </div>
+                                <button @click="detailView = 'reportForm'" class="fixed bottom-24 right-4 bg-[var(--gvt-primary)] text-white h-14 w-14 rounded-full shadow-lg flex items-center justify-center hover:bg-[var(--gvt-primary-hover)]"><span class="material-symbols-outlined text-3xl">add</span></button>
+                            </div>
+                             <!-- Settings Screen Content -->
+                             <div x-show="currentScreen === 'settings'" class="space-y-6">
+                                <section><h2 class="text-lg font-semibold text-[var(--gvt-text-primary)] mb-3 px-1">Account</h2><div class="flex items-center gap-4 rounded-lg bg-white p-4 border border-[var(--gvt-border)]"><img :src="`https://ui-avatars.com/api/?name=${user?.name.replace(' ', '+')}&background=334155&color=fff&bold=true`" class="h-14 w-14 rounded-full"><div><p class="text-[var(--gvt-text-primary)] text-base font-semibold" x-text="user?.name"></p><p class="text-[var(--gvt-text-secondary)] text-sm" x-text="user?.employeeId"></p></div></div></section>
+                                <section><h2 class="text-lg font-semibold text-[var(--gvt-text-primary)] mb-3 px-1">App Information</h2><div class="rounded-lg bg-white p-4 flex justify-between items-center border border-[var(--gvt-border)]"><p class="text-[var(--gvt-text-primary)] text-base">Version</p><p class="text-[var(--gvt-text-secondary)] text-base">1.0.0</p></div></section>
+                                <div class="pt-4"><button @click="logout()" class="flex w-full items-center justify-center gap-2 rounded-md h-12 text-red-700 bg-red-100 text-base font-bold border border-red-200 hover:bg-red-200 transition-colors"><span class="material-symbols-outlined">logout</span><span>Log Out</span></button></div>
+                            </div>
+                         </div>
+                    </div>
+                </main>
+
+                <!-- ===== DETAIL VIEWS & MODALS ===== -->
+                <div x-show="detailView" x-transition.opacity class="absolute inset-0 bg-[var(--gvt-bg-light)] z-20 flex flex-col">
+                    <!-- History Detail View -->
+                    <div x-show="detailView === 'history'" class="flex-grow overflow-y-auto">
+                        <header class="flex items-center bg-white p-2 justify-between sticky top-0 z-10 border-b border-[var(--gvt-border)]"><button @click="detailView = null" class="text-slate-800 flex size-10 items-center justify-center rounded-full hover:bg-slate-100"><span class="material-symbols-outlined">arrow_back</span></button><h1 class="text-lg font-bold text-center flex-1 pr-10">Asset History</h1></header>
+                        <div x-data="{fitting: fittings[currentFittingId]}">
+                            <template x-if="fitting">
+                                <div class="p-4 bg-white border-b border-[var(--gvt-border)]"><h2 class="text-[var(--gvt-text-primary)] text-2xl font-bold mb-1" x-text="fitting.type"></h2><p class="font-mono text-[var(--gvt-text-secondary)]" x-text="currentFittingId"></p></div>
+                                <div class="p-4 space-y-6">
+                                    <div><h3 class="text-[var(--gvt-text-primary)] text-lg font-semibold mb-3">Inspection Logs</h3><div class="relative pl-8 space-y-4"><div class="absolute left-3.5 top-3.5 h-full w-0.5 bg-[var(--gvt-border)]"></div><template x-for="(log, index) in fitting.inspectionLogs" :key="index"><div class="flex items-start space-x-4"><div class="absolute left-0 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-slate-600"><span class="material-symbols-outlined text-base">description</span></div><div class="flex-1 rounded-lg bg-white p-4 border border-[var(--gvt-border)]"><div class="flex justify-between items-center"><p class="text-[var(--gvt-text-primary)] text-base font-semibold" x-text="`Inspection on ${log.date}`"></p><span class="text-xs font-semibold uppercase tracking-wider px-2 py-1 rounded" :class="log.status === 'Passed' ? 'status-passed' : 'status-failed'" x-text="log.status"></span></div><p class="text-[var(--gvt-text-secondary)] text-sm mt-1" x-text="`Inspector: ${log.inspector}`"></p><p x-show="log.notes" class="text-slate-600 text-sm mt-2 bg-slate-100 p-2 rounded-md" x-text="`Notes: ${log.notes}`"></p></div></div></template></div></div>
+                                    <div><h3 class="text-[var(--gvt-text-primary)] text-lg font-semibold mb-3">Vendor Information</h3><div class="rounded-lg bg-white p-4 space-y-3 border border-[var(--gvt-border)]"><div class="flex"><p class="text-[var(--gvt-text-secondary)] text-sm w-1/3">Vendor</p><p class="text-[var(--gvt-text-primary)] text-sm font-medium" x-text="fitting.vendorInfo.name"></p></div><div class="flex"><p class="text-[var(--gvt-text-secondary)] text-sm w-1/3">Contact</p><a class="text-[var(--gvt-primary)] text-sm" :href="`mailto:${fitting.vendorInfo.contact}`" x-text="fitting.vendorInfo.contact"></a></div></div></div>
+                                    <div><h3 class="text-[var(--gvt-text-primary)] text-lg font-semibold mb-3">Warranty Details</h3><div class="rounded-lg bg-white p-4 space-y-3 border border-[var(--gvt-border)]"><div class="grid grid-cols-2 gap-4"><div><p class="text-[var(--gvt-text-secondary)] text-sm">Start Date</p><p class="text-[var(--gvt-text-primary)] text-sm font-medium" x-text="fitting.warranty.start"></p></div><div><p class="text-[var(--gvt-text-secondary)] text-sm">End Date</p><p class="text-[var(--gvt-text-primary)] text-sm font-medium" x-text="fitting.warranty.end"></p></div></div><div><p class="text-[var(--gvt-text-secondary)] text-sm">Status</p><p class="text-[var(--gvt-text-primary)] text-sm font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full" :class="fitting.warranty.status === 'Active' ? 'bg-green-500' : 'bg-red-500'"></span><span x-text="fitting.warranty.status"></span></p></div></div></div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <!-- Report Detail View -->
+                    <div x-show="detailView === 'reportDetail'" class="flex-grow overflow-y-auto">
+                        <header class="flex items-center bg-white p-2 justify-between sticky top-0 z-10 border-b border-[var(--gvt-border)]"><button @click="detailView = null" class="text-slate-800 flex size-10 items-center justify-center rounded-full hover:bg-slate-100"><span class="material-symbols-outlined">arrow_back</span></button><h1 class="text-lg font-bold text-center flex-1 pr-10">Report Details</h1></header>
+                        <div x-data="{report: reports.find(r => r.id === currentReportId)}"><template x-if="report"><div class="p-4 space-y-4"><div class="bg-white p-4 rounded-lg border border-[var(--gvt-border)]"><h2 class="text-[var(--gvt-text-secondary)] text-sm">Issue Type</h2><p class="text-[var(--gvt-text-primary)] text-lg font-semibold" x-text="report.issueType"></p></div><div class="bg-white p-4 rounded-lg border border-[var(--gvt-border)]"><h2 class="text-[var(--gvt-text-secondary)] text-sm">Target UID</h2><p class="text-[var(--gvt-text-primary)] text-lg font-mono" x-text="report.fittingUID"></p></div><div class="grid grid-cols-2 gap-4"><div class="bg-white p-4 rounded-lg border border-[var(--gvt-border)]"><h2 class="text-[var(--gvt-text-secondary)] text-sm">Severity</h2><p class="font-semibold" :class="{ 'text-red-600': report.severity === 'High', 'text-yellow-600': report.severity === 'Medium', 'text-blue-600': report.severity === 'Low' }" x-text="report.severity"></p></div><div class="bg-white p-4 rounded-lg border border-[var(--gvt-border)]"><h2 class="text-[var(--gvt-text-secondary)] text-sm">Status</h2><p class="font-semibold" :class="{ 'text-slate-600': report.status === 'Open', 'text-orange-600': report.status === 'In Progress', 'text-green-600': report.status === 'Resolved' }" x-text="report.status"></p></div></div><div class="bg-white p-4 rounded-lg border border-[var(--gvt-border)]"><h2 class="text-[var(--gvt-text-secondary)] text-sm">Comments</h2><p class="text-[var(--gvt-text-primary)]" x-text="report.comments || 'No comments provided.'"></p></div><div class="bg-white p-4 rounded-lg border border-[var(--gvt-border)]"><h2 class="text-[var(--gvt-text-secondary)] text-sm">Submitted By</h2><p class="text-[var(--gvt-text-primary)]" x-text="`${report.submittedBy} on ${new Date(report.date).toLocaleString()}`"></p></div></div></template></div>
+                    </div>
+                    <!-- File Report Form View -->
+                    <div x-show="detailView === 'reportForm'" class="flex-grow overflow-y-auto">
+                        <header class="flex items-center bg-white p-2 justify-between sticky top-0 z-10 border-b border-[var(--gvt-border)]"><button @click="detailView = null" class="text-slate-800 flex size-10 items-center justify-center rounded-full hover:bg-slate-100"><span class="material-symbols-outlined">close</span></button><h1 class="text-lg font-bold text-center flex-1 pr-10">File New Report</h1></header>
+                        <div class="p-4"><div x-show="reportStatus" x-transition class="p-4 rounded-lg status-passed font-medium flex items-center gap-3 mb-4"><span class="material-symbols-outlined">check_circle</span><span x-text="reportStatus"></span></div><form @submit.prevent="submitReport()" x-show="!reportStatus" class="space-y-6"><div><label class="block text-sm font-medium text-[var(--gvt-text-secondary)] mb-2">Target UID</label><input type="text" x-model="newReport.fittingUID" class="form-input w-full rounded-md border-[var(--gvt-border)]" placeholder="Scan or enter UID first" required></div><div><label class="block text-sm font-medium text-[var(--gvt-text-secondary)] mb-2">Issue Type</label><select x-model="newReport.issueType" class="form-select w-full rounded-md border-[var(--gvt-border)]" required><option value="" disabled>Select Issue Type</option><option>Loose ERC</option><option>Pad Wear</option><option>Liner Crack</option></select></div><div><label class="block text-sm font-medium text-[var(--gvt-text-secondary)] mb-2">Severity</label><div class="flex gap-3"><template x-for="s in ['Low', 'Medium', 'High']"><label class="flex-1 text-center rounded-md border-2 p-3 cursor-pointer transition-all" :class="newReport.severity === s ? 'bg-slate-100 border-[var(--gvt-primary)] text-[var(--gvt-primary)] font-semibold' : 'border-[var(--gvt-border)] text-[var(--gvt-text-secondary)]'"><span x-text="s"></span><input type="radio" :value="s" x-model="newReport.severity" class="sr-only"></label></template></div></div><div><label class="block text-sm font-medium text-[var(--gvt-text-secondary)] mb-2">Comments</label><textarea x-model="newReport.comments" class="form-textarea w-full rounded-md border-[var(--gvt-border)]" placeholder="Add any relevant details..."></textarea></div><button type="submit" class="w-full h-12 flex items-center justify-center rounded-md bg-[var(--gvt-primary)] text-white font-bold hover:bg-[var(--gvt-primary-hover)] transition-all">Submit Report</button></form></div>
+                    </div>
+                </div>
+                <!-- Analytics Modal -->
+                <div x-show="showAnalytics" @click.self="showAnalytics = false" x-transition.opacity class="absolute inset-0 bg-black/40 z-30 flex items-end"><div @click.away="showAnalytics = false" x-show="showAnalytics" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full" class="bg-[var(--gvt-bg-light)] w-full rounded-t-2xl max-h-[90%] overflow-y-auto"><div class="p-4 border-b border-[var(--gvt-border)] text-center relative"><h2 class="text-lg font-bold text-[var(--gvt-text-primary)]">Analytics & Insights</h2><button @click="showAnalytics = false" class="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-slate-200">&times;</button></div><div class="p-4 space-y-6"><div class="grid grid-cols-2 gap-4"><div class="bg-white p-3 rounded-lg border border-[var(--gvt-border)] text-center"><p class="text-2xl font-bold text-[var(--gvt-text-primary)]" x-text="Object.keys(fittings).length"></p><p class="text-sm text-[var(--gvt-text-secondary)]">Total Assets</p></div><div class="bg-white p-3 rounded-lg border border-[var(--gvt-border)] text-center"><p class="text-2xl font-bold text-red-600" x-text="reports.filter(r => r.severity === 'High' && r.status === 'Open').length"></p><p class="text-sm text-[var(--gvt-text-secondary)]">Open High-Severity</p></div></div><div class="bg-white p-4 rounded-lg border border-[var(--gvt-border)] space-y-3"><h3 class="font-semibold text-[var(--gvt-text-primary)]">Vendor Failure Rate</h3><div class="space-y-3 text-xs"><div x-data="{ rate: 10 }"><p class="flex justify-between text-[var(--gvt-text-secondary)]"><span>RailTech Solutions</span><span x-text="`${rate}%`"></span></p><div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" :style="`width: ${rate}%`"></div></div></div><div x-data="{ rate: 50 }"><p class="flex justify-between text-[var(--gvt-text-secondary)]"><span>DuraTrack Components</span><span x-text="`${rate}%`"></span></p><div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-red-500 h-2 rounded-full" :style="`width: ${rate}%`"></div></div></div><div x-data="{ rate: 5 }"><p class="flex justify-between text-[var(--gvt-text-secondary)]"><span>SteelForge Inc.</span><span x-text="`${rate}%`"></span></p><div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" :style="`width: ${rate}%`"></div></div></div></div></div><div class="bg-white p-4 rounded-lg border border-[var(--gvt-border)] space-y-3"><h3 class="font-semibold text-[var(--gvt-text-primary)]">Common Defect Types</h3><div class="flex justify-around items-center"><div class="relative w-24 h-24"><svg class="w-full h-full" viewBox="0 0 36 36"><path class="stroke-current text-slate-200" fill="none" stroke-width="4" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path><path class="stroke-current text-red-500" stroke-width="4" fill="none" stroke-dasharray="50, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path></svg><span class="absolute inset-0 flex items-center justify-center text-lg font-bold text-[var(--gvt-text-primary)]">50%</span></div><div class="text-sm space-y-2 text-[var(--gvt-text-secondary)]"><p class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-red-500"></span><span>Liner Crack</span></p><p class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-yellow-500"></span><span>Pad Wear</span></p><p class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm bg-blue-500"></span><span>Loose ERC</span></p></div></div></div></div></div></div>
+            </div>
+            
+            <!-- Bottom Navigation Bar -->
+            <nav x-show="!detailView" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-20 bg-white/95 backdrop-blur-sm border-t border-[var(--gvt-border)] flex justify-around items-center">
+                <template x-for="navItem in navItems" :key="navItem.id"><a href="#" @click.prevent="currentScreen = navItem.id" class="flex flex-col items-center gap-1 w-1/5 py-1" :class="currentScreen === navItem.id ? 'text-[var(--gvt-primary)] nav-active' : 'text-[var(--gvt-text-secondary)]'"><span class="material-symbols-outlined" x-text="navItem.icon"></span><p class="text-xs font-semibold" x-text="navItem.label"></p></a></template>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Alpine.js Application Logic -->
+    <script>
+    function railDevApp() {
+        return {
+            // =================================================================
+            // STATE: All application data and UI state variables
+            // =================================================================
+            currentScreen: 'home', authScreen: 'login', user: null, users: {}, fittings: {}, reports: [],
+            currentFittingId: null, currentReportId: null, detailView: null, showAnalytics: false,
+            scanInput: '', scanStatus: { success: false, message: ''},
+            newReport: { fittingUID: '', issueType: '', severity: 'Medium', comments: '' }, reportStatus: '',
+            loginForm: { employeeId: 'inspector01', password: 'password' }, loginError: '',
+            registerForm: { name: '', employeeId: '', password: '' }, registerError: '',
+            inventoryFilters: { search: '', type: 'all', status: 'all' },
+            reportFilters: { severity: 'all', status: 'all' },
+            navItems: [ { id: 'home', label: 'Home', icon: 'dashboard' }, { id: 'scan', label: 'Scan', icon: 'qr_code_scanner' }, { id: 'inventory', label: 'Inventory', icon: 'inventory_2' }, { id: 'reports', label: 'Reports', icon: 'flag' }, { id: 'settings', label: 'Settings', icon: 'settings' } ],
+
+            // =================================================================
+            // GETTERS: Computed properties for dynamically filtering lists
+            // =================================================================
+            get filteredInventory() { const searchLower = this.inventoryFilters.search.toLowerCase(); return Object.values(this.fittings).filter(item => { const typeMatch = this.inventoryFilters.type === 'all' || item.type === this.inventoryFilters.type; const statusMatch = this.inventoryFilters.status === 'all' || item.status === this.inventoryFilters.status; const searchMatch = !searchLower || item.uid.toLowerCase().includes(searchLower) || item.vendorInfo.name.toLowerCase().includes(searchLower); return typeMatch && statusMatch && searchMatch; }); },
+            get filteredReports() { return this.reports.filter(report => { const severityMatch = this.reportFilters.severity === 'all' || report.severity === this.reportFilters.severity; const statusMatch = this.reportFilters.status === 'all' || report.status === this.reportFilters.status; return severityMatch && statusMatch; }); },
+            
+            // =================================================================
+            // METHODS: Functions that handle all application logic
+            // =================================================================
+            init() { const savedUsers = localStorage.getItem('railDevUsers'); if (savedUsers) this.users = JSON.parse(savedUsers); const savedUser = localStorage.getItem('railDevCurrentUser'); if (savedUser) this.user = JSON.parse(savedUser); this.loadDummyData(); },
+            login() { this.loginError = ''; const user = this.users[this.loginForm.employeeId]; if (user && user.password === this.loginForm.password) { this.user = { name: user.name, employeeId: this.loginForm.employeeId }; localStorage.setItem('railDevCurrentUser', JSON.stringify(this.user)); this.loginForm = { employeeId: '', password: '' }; } else { this.loginError = 'Invalid Employee ID or password.'; } },
+            register() { this.registerError = ''; if (this.users[this.registerForm.employeeId]) { this.registerError = 'Employee ID already exists.'; return; } if(!this.registerForm.name || !this.registerForm.employeeId || !this.registerForm.password) { this.registerError = 'All fields are required.'; return; } this.users[this.registerForm.employeeId] = { name: this.registerForm.name, password: this.registerForm.password }; localStorage.setItem('railDevUsers', JSON.stringify(this.users)); this.user = { name: this.registerForm.name, employeeId: this.registerForm.employeeId }; localStorage.setItem('railDevCurrentUser', JSON.stringify(this.user)); this.registerForm = { name: '', employeeId: '', password: '' }; },
+            logout() { this.user = null; localStorage.removeItem('railDevCurrentUser'); this.authScreen = 'login'; this.detailView = null; },
+            scanItem(uid) { if (this.fittings[uid]) { this.viewFitting(uid); this.scanStatus = { success: true, message: 'UID found!'}; this.scanInput = ''; } else { this.scanStatus = { success: false, message: 'UID not found.'}; } },
+            submitReport() { if (!this.newReport.fittingUID || !this.newReport.issueType) { alert('Please provide a UID and select an Issue Type.'); return; } const newId = this.reports.length > 0 ? Math.max(...this.reports.map(r => r.id)) + 1 : 1; const report = { ...this.newReport, id: newId, status: 'Open', date: new Date().toISOString(), submittedBy: this.user.name }; this.reports.push(report); this.reportStatus = 'Report submitted successfully!'; setTimeout(() => { this.newReport = { fittingUID: '', issueType: '', severity: 'Medium', comments: '' }; this.reportStatus = ''; this.detailView = null; }, 2000); },
+            viewFitting(uid) { this.currentFittingId = uid; this.detailView = 'history'; },
+            viewReport(id) { this.currentReportId = id; this.detailView = 'reportDetail'; },
+            resetInventoryFilters() { this.inventoryFilters = { search: '', type: 'all', status: 'all' }; },
+            resetReportFilters() { this.reportFilters = { severity: 'all', status: 'all' }; },
+            loadDummyData() {
+                this.fittings = {
+                    "A1B2-C3D4-E5F6-G7H8": { uid: "A1B2-C3D4-E5F6-G7H8", type: "Elastic Rail Clip", icon: "link", status: "Passed", vendorInfo: { name: "RailTech Solutions", contact: "contact@railtech.com" }, warranty: { start: "2023-01-01", end: "2025-01-01", status: "Active" }, inspectionLogs: [ { date: "2024-01-15", inspector: "Ethan Carter", status: "Passed", notes: "All systems nominal." } ] },
+                    "X9Y8-Z7W6-V5U4-T3S2": { uid: "X9Y8-Z7W6-V5U4-T3S2", type: "Liner", icon: "splitscreen", status: "Failed", vendorInfo: { name: "DuraTrack Components", contact: "sales@duratrack.com" }, warranty: { start: "2023-01-01", end: "2025-01-01", status: "Active" }, inspectionLogs: [ { date: "2023-01-28", inspector: "Noah Thompson", status: "Failed", notes: "RFID tag unreadable." } ] },
+                    "K4L5-M6N7-O8P9-Q0R1": { uid: "K4L5-M6N7-O8P9-Q0R1", type: "Rail Pad", icon: "view_module", status: "Passed", vendorInfo: { name: "SteelForge Inc.", contact: "contact@steelforge.com" }, warranty: { start: "2022-11-10", end: "2024-11-10", status: "Expired" }, inspectionLogs: [ { date: "2024-04-20", inspector: "John Doe", status: "Passed", notes: "Minor wear, still within tolerance." } ] },
+                    "F3G4-H5I6-J7K8-L9M0": { uid: "F3G4-H5I6-J7K8-L9M0", type: "Elastic Rail Clip", icon: "link", status: "Failed", vendorInfo: { name: "DuraTrack Components", contact: "sales@duratrack.com" }, warranty: { start: "2023-05-15", end: "2025-05-15", status: "Active" }, inspectionLogs: [ { date: "2024-05-01", inspector: "Jane Smith", status: "Failed", notes: "Clip has lost tension." } ] }
+                };
+                this.reports = [
+                    { id: 1, fittingUID: "X9Y8-Z7W6-V5U4-T3S2", issueType: "Liner Crack", severity: "High", status: "Open", comments: "Visible stress fracture.", date: "2024-05-20T10:30:00Z", submittedBy: "Noah Thompson" },
+                    { id: 2, fittingUID: "F3G4-H5I6-J7K8-L9M0", issueType: "Loose ERC", severity: "High", status: "In Progress", comments: "Clip has lost tension, immediate replacement required.", date: "2024-05-01T11:00:00Z", submittedBy: "Jane Smith" },
+                    { id: 3, fittingUID: "A1B2-C3D4-E5F6-G7H8", issueType: "Pad Wear", severity: "Medium", status: "Resolved", comments: "Showing signs of early degradation, was replaced.", date: "2024-05-18T14:00:00Z", submittedBy: "Jane Smith" }
+                ];
+                if (!localStorage.getItem('railDevUsers')) { this.users = { "inspector01": { name: "John Doe", password: "password" }, "manager01": { name: "Jane Smith", password: "password" } }; }
+            }
+        }
+    }
+    </script>
+</body>
+</html>
